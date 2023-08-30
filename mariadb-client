@@ -1,0 +1,16 @@
+#!/bin/sh
+set -e
+set -u
+
+fn_mariadb_client_install() { (
+    if command -v mysql > /dev/null; then
+        return 0
+    fi
+
+    sudo apt-get install -y software-properties-common
+    sudo apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xF1656F24C74CD1D8
+    sudo add-apt-repository "deb [arch=amd64,arm64,ppc64el] http://mariadb.mirror.liquidtelecom.com/repo/10.4/ubuntu $(lsb_release -cs) main"
+    sudo apt -y install mariadb-client
+); }
+
+fn_mariadb_client_install
