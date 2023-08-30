@@ -28,8 +28,8 @@ while true; do
             echo ""
             echo "Backup tasks starting"
             ./mariadb-backup \
-                /mnt/env/mariadb-remoteuser-staging.env \
-                /mnt/backups/staging-db-bak.d/
+                /mnt/storage/mariadb-staging.env \
+                /mnt/storage/mariadb-staging.d/
             echo "Backup tasks complete"
             echo ""
 
