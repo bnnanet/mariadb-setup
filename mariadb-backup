@@ -1,0 +1,45 @@
+#!/bin/sh
+set -e
+set -u
+
+fn_help() { (
+    echo >&2 "Usage: ./backup-db <env-file> <bak-dir>"
+    echo >&2 "Example: ./backup-db ./prod.env /mnt/storage/prod-db/"
+); }
+
+my_env_file="${1:-}"
+if ! test -n "${my_env_file}"; then
+    fn_help
+    exit 1
+fi
+my_bak_dir="${2:-}"
+if ! test -n "${my_bak_dir}"; then
+    fn_help
+    exit 1
+fi
+if test -e "${my_env_file}"; then
+    #shellcheck disable=SC1090
+    . "${my_env_file}"
+fi
+
+if test -z "${DB_URL}"; then
+    echo "Error: missing DB_URL"
+    exit 1
+fi
+my_user="$(echo "${DB_URL}" | cut -d'@' -f1 | sed 's://::' | cut -d':' -f2)"
+my_pass="$(echo "${DB_URL}" | cut -d'@' -f1 | sed 's://::' | cut -d':' -f3)"
+my_host="$(echo "${DB_URL}" | cut -d'@' -f2 | cut -d'/' -f1)"
+my_dbname="$(echo "${DB_URL}" | cut -d'@' -f2 | cut -d'/' -f2)"
+
+my_ts="$(date +%F_%H.%M.%S)"
+mkdir -p "${my_bak_dir}"
+echo "Connecting as '${my_user}@${my_host}/${my_dbname}'..."
+mysqldump --host "${my_host}" -u "${my_user}" -p"${my_pass}" "${my_dbname}" \
+    --single-transaction --quick --lock-tables=false \
+    > "${my_bak_dir}/backup-${my_ts}.sql" || true
+
+#gzip "${my_bak_dir}/backup-${my_ts}.sql"
+xz "${my_bak_dir}/backup-${my_ts}.sql"
+
+find "${my_bak_dir}" -maxdepth 1 -mtime +45 -type d -exec rm -f "{}" \;
+find "${my_bak_dir}" -maxdepth 1 -mtime +45 -type f -exec rm -f "{}" \;
