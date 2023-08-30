@@ -1,0 +1,29 @@
+#!/bin/sh
+set -e
+set -u
+
+fn_setpass() { (
+    if test -e ./mariadb.env; then
+        return 0
+    fi
+
+    my_username="backupuser1"
+    my_password="$(openssl rand -hex 16)"
+    my_password="${MYSQL_PASSWORD:-${my_password}}"
+
+    printf "
+CREATE USER IF NOT EXISTS '%s'@'%%' IDENTIFIED BY '_not_password_';
+ALTER USER '%s'@'%%' IDENTIFIED BY '%s';
+GRANT SELECT ON databasename.* TO '%s'@'%%';
+FLUSH PRIVILEGES;
+" "${my_username}" "${my_username}" "${my_password}" "${my_username}" |
+        sudo mysql -u root
+
+    echo "MYSQL_USERNAME='${my_username}'
+MYSQL_PASSWORD='${my_password}'
+MYSQL_URL=mysql://${my_username}:${my_password}@localhost/databasename
+" |
+        grep 'MYSQL'
+); }
+
+fn_setpass
