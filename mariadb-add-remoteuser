@@ -17,7 +17,7 @@ ALTER USER '%s'@'%%' IDENTIFIED BY '%s';
 GRANT SELECT ON databasename.* TO '%s'@'%%';
 GRANT SHOW VIEW ON databasename.* TO '%s'@'%%';
 FLUSH PRIVILEGES;
-" "${my_username}" "${my_username}" "${my_password}" "${my_username}" |
+" "${my_username}" "${my_username}" "${my_password}" "${my_username}" "${my_username}" |
         sudo mysql -u root
 
     echo "MYSQL_USERNAME='${my_username}'
