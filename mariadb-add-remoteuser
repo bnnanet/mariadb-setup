@@ -7,7 +7,7 @@ fn_setpass() { (
         return 0
     fi
 
-    my_username="backupuser1"
+    my_username="backupuser"
     my_password="$(openssl rand -hex 16)"
     my_password="${MYSQL_PASSWORD:-${my_password}}"
 
@@ -15,6 +15,7 @@ fn_setpass() { (
 CREATE USER IF NOT EXISTS '%s'@'%%' IDENTIFIED BY '_not_password_';
 ALTER USER '%s'@'%%' IDENTIFIED BY '%s';
 GRANT SELECT ON databasename.* TO '%s'@'%%';
+GRANT SHOW VIEW ON databasename.* TO '%s'@'%%';
 FLUSH PRIVILEGES;
 " "${my_username}" "${my_username}" "${my_password}" "${my_username}" |
         sudo mysql -u root
