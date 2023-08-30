@@ -1,0 +1,45 @@
+#!/bin/sh
+
+# After Pacific (PT) end-of-day:
+#     5:38pm (winter) / 6:38pm (summer) PT
+my_pt_utc_eod="01"
+
+# Before Eastern (ET) start-of-day:
+#     3:38am (winter) / 4:38am (summer) ET
+my_et_utc_sod="08"
+
+my_minute="38"
+
+my_first="non-zero"
+
+echo "Backup task started."
+echo "Will run at '$my_pt_utc_eod:$my_minute UTC' and '$my_et_utc_sod:$my_minute UTC'."
+while true; do
+    my_hours="$(date -u '+%H')"
+    my_minutes="$(date -u '+%M')"
+    echo "Current time is '$my_hours:$my_minutes UTC'"
+
+    if test "$my_hours" = "$my_pt_utc_eod" ||
+        test "$my_hours" = "$my_et_utc_sod" ||
+        test -n "${my_first}"; then
+        if test "$my_minutes" = "38" ||
+            test -n "${my_first}"; then
+
+            echo ""
+            echo "Backup tasks starting"
+            ./mariadb-backup \
+                /mnt/env/mariadb-remoteuser-staging.env \
+                /mnt/backups/staging-db-bak.d/
+            echo "Backup tasks complete"
+            echo ""
+
+            if test -z "${my_first}"; then
+                sleep "$((6 * 60 * 60))"
+            fi
+            my_first=""
+        fi
+    fi
+
+    # account for accumulated sub-second skews by sleep
+    sleep 59
+done
